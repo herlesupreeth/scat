@@ -386,6 +386,64 @@ LTE L1 Sync Info: SCell 2: PCI: 293, Bandwidth: 20 MHz, phich-Duration: normal, 
         expected = {'stdout': 'LTE RRC RACH Message: Direction: 1, Cause: 1, Preamble Group: 0x0, Preamble ID: 0xd, TA: 5, TC-RNTI: 0x368f'}
         self.assertDictEqual(result, expected) # type: ignore
 
+    # NAS
+    def test_sdm_lte_nas_eps_bearer_context(self):
+        payload = binascii.unhexlify('00050001')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_EPS_BEARER_CONTEXT, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_eps_bearer_context(packet)
+        expected = 'LTE NAS EPS Bearer Context: 0, Bearer ID: 5, 0, Status: Activated'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('01060002')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_EPS_BEARER_CONTEXT, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_eps_bearer_context(packet)
+        expected = 'LTE NAS EPS Bearer Context: 1, Bearer ID: 6, 0, Status: Activation Requested'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('01060001')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_EPS_BEARER_CONTEXT, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_eps_bearer_context(packet)
+        expected = 'LTE NAS EPS Bearer Context: 1, Bearer ID: 6, 0, Status: Activated'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('02070002')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_EPS_BEARER_CONTEXT, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_eps_bearer_context(packet)
+        expected = 'LTE NAS EPS Bearer Context: 2, Bearer ID: 7, 0, Status: Activation Requested'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('02070001')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_EPS_BEARER_CONTEXT, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_eps_bearer_context(packet)
+        expected = 'LTE NAS EPS Bearer Context: 2, Bearer ID: 7, 0, Status: Activated'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+    def test_sdm_lte_nas_pdp(self):
+        payload = binascii.unhexlify('0000ff0000ff0000ff')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_PDP, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_pdp(packet)
+        expected = 'LTE NAS PDP: No active context'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('0001ff0000ff0000ff')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_PDP, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_pdp(packet)
+        expected = 'LTE NAS PDP: No active context'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('0501ff0000ff0000ff')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_PDP, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_pdp(packet)
+        expected = 'LTE NAS PDP: EPS Bearer Context 0: Bearer ID: 5, Type: 1'
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('0501ff0601240000ff')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_PDP, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_nas_pdp(packet)
+        expected = '''LTE NAS PDP: EPS Bearer Context 0: Bearer ID: 5, Type: 1
+LTE NAS PDP: EPS Bearer Context 1: Bearer ID: 6, Type: 1, ESM Cause: 36'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
     # VoLTE
 
     def test_sdm_lte_volte_rtp_packet(self):

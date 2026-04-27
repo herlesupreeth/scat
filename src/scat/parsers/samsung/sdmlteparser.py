@@ -734,14 +734,21 @@ class SdmLteParser:
         return {'layer': 'nas', 'cp': [gsmtap_hdr + nas_msg]}
 
     def sdm_lte_nas_eps_bearer_context(self, pkt: bytes):
-        # All zeroes?
-        # 00050001
-        # 01060002
-        # 01060001
-        # 02070002
-        # 02070001
+        bearer_ctx_status_map = {
+            0: 'Deactivated',
+            1: 'Activated',
+            2: 'Activation Requested'
+        }
+
         pkt = pkt[15:-1]
-        return {'stdout': 'LTE NAS EPS Bearer Context: {}'.format(binascii.hexlify(pkt).decode())}
+        if len(pkt) < 4:
+            self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected (4)'.format(len(pkt)))
+            return
+
+        stdout = 'LTE NAS EPS Bearer Context: {}, Bearer ID: {}, {}, Status: {}'.format(
+            pkt[0], pkt[1], pkt[2], util.map_lookup_value(bearer_ctx_status_map, pkt[3])
+        )
+        return {'stdout': stdout}
 
     def sdm_lte_nas_eps_bearer_qos(self, pkt: bytes):
         # All zeroes?
@@ -749,13 +756,32 @@ class SdmLteParser:
         return {'stdout': 'LTE NAS EPS Bearer QoS: {}'.format(binascii.hexlify(pkt).decode())}
 
     def sdm_lte_nas_pdp(self, pkt: bytes):
-        # 0000ff0000ff0000ff
-        # 0001ff0000ff0000ff
-        # 0501ff0000ff0000ff
-        # Bearer ID, Bearer Type, ? x3
+        # Bearer ID, Bearer Type, ESM Cause x3
 
         pkt = pkt[15:-1]
-        return {'stdout': 'LTE NAS PDP: {}'.format(binascii.hexlify(pkt).decode())}
+        if len(pkt) < 3:
+            self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected (3)'.format(len(pkt)))
+            return
+
+        stdout = ''
+        has_active_ctx = False
+
+        num_pdp_ctx = len(pkt) // 3
+        for i in range(num_pdp_ctx):
+            bearer_id = pkt[i*3]
+            bearer_type = pkt[i*3+1]
+            esm_cause = pkt[i*3+2]
+            if bearer_id > 0:
+                stdout += 'LTE NAS PDP: EPS Bearer Context {}: Bearer ID: {}, Type: {}'.format(i, bearer_id, bearer_type)
+                if esm_cause == 0xff:
+                    stdout += '\n'
+                else:
+                    stdout += ', ESM Cause: {}\n'.format(esm_cause)
+                has_active_ctx = True
+        if not has_active_ctx:
+            stdout = 'LTE NAS PDP: No active context'
+
+        return {'stdout': stdout.rstrip()}
 
     def sdm_lte_nas_ip(self, pkt: bytes):
         # 00000000050000000000000001000000020000000000000000000000
