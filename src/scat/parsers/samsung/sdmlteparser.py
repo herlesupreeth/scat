@@ -670,15 +670,29 @@ class SdmLteParser:
     # NAS
 
     def sdm_lte_nas_sim_data(self, pkt: bytes):
-        '''
-        0x58: 'Sim(?)', len:13
-            "mcc",  '<2s', 2 bytes, pos:4,   # bcd encoded
-            "mnc",  '<1s', 1 bytes, pos:6,   # bcd encoded
-            "IMSI", '<9s', 9 bytes, pos:15,  # bcd encoded
-        if pkt[0] == 0x58:
-        '''
         pkt = pkt[15:-1]
-        return {'stdout': 'LTE NAS SIM Data: {}'.format(binascii.hexlify(pkt).decode())}
+        header = namedtuple('SdmLteNasSimData', 'lai s_tmsi_mmec s_tmsi_m_tmsi unk1 imsi guti_plmn guti_mmegi guti_mmec guti_s_tmsi unk2')
+        fmtstr = '!5sBLB8s3sHBLB'
+        expected_size = struct.calcsize(fmtstr)
+        if len(pkt) < expected_size:
+            self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected ({})'.format(len(pkt), expected_size))
+            return
+        nas_sim_data = header._make(struct.unpack(fmtstr, pkt[0:expected_size]))
+
+        lai = util.unpack_lai(nas_sim_data.lai)
+        guti_plmn = util.unpack_mcc_mnc(nas_sim_data.guti_plmn)
+        imsi_digits = []
+        for x in nas_sim_data.imsi:
+            imsi_digits.append(x & 0xf)
+            imsi_digits.append(x >> 4)
+        imsi_str = ''.join([str(c) for c in imsi_digits])
+        if imsi_str[0] == '9':
+            imsi_str = imsi_str[1:]
+
+        return {'stdout': 'LTE NAS SIM Data: LAI: {}-{}-{:4x}, S-TMSI: {:02x}-{:08x}, IMSI: {}, GUTI: {}-{}-{:04x}-{:02x}-{:08x}'.format(
+            lai[0], lai[1], lai[2], nas_sim_data.s_tmsi_mmec, nas_sim_data.s_tmsi_m_tmsi,
+            imsi_str,
+            guti_plmn[0], guti_plmn[1], nas_sim_data.guti_mmegi, nas_sim_data.guti_mmec, nas_sim_data.guti_s_tmsi)}
 
     def sdm_lte_nas_status_variable(self, pkt: bytes):
         # 3 bytes
