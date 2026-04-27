@@ -741,13 +741,30 @@ class SdmLteParser:
         }
 
         pkt = pkt[15:-1]
-        if len(pkt) < 4:
-            self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected (4)'.format(len(pkt)))
-            return
+        if self.icd_ver >= (5, 17):
+            if len(pkt) < 4:
+                self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected (4)'.format(len(pkt)))
+                self.parent.logger.log(logging.WARNING, 'Packet: {}'.format(binascii.hexlify(pkt).decode()))
+                return
 
-        stdout = 'LTE NAS EPS Bearer Context: {}, Bearer ID: {}, {}, Status: {}'.format(
-            pkt[0], pkt[1], pkt[2], util.map_lookup_value(bearer_ctx_status_map, pkt[3])
-        )
+            if pkt[1] == 0:
+                return
+
+            stdout = 'LTE NAS EPS Bearer Context: {}, Bearer ID: {}, {}, Status: {}'.format(
+                pkt[0], pkt[1], pkt[2], util.map_lookup_value(bearer_ctx_status_map, pkt[3])
+            )
+        else:
+            if len(pkt) < 3:
+                self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected (3)'.format(len(pkt)))
+                self.parent.logger.log(logging.WARNING, 'Packet: {}'.format(binascii.hexlify(pkt).decode()))
+                return
+
+            if pkt[1] == 0:
+                return
+
+            stdout = 'LTE NAS EPS Bearer Context: {}, Bearer ID: {}, {}'.format(
+                pkt[0], pkt[1], pkt[2]
+            )
         return {'stdout': stdout}
 
     def sdm_lte_nas_eps_bearer_qos(self, pkt: bytes):
