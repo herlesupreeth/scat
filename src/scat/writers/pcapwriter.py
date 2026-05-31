@@ -29,6 +29,9 @@ class PcapWriter(AbstractWriter):
         return self
 
     def write_pkt(self, sock_content: bytes, port: int, radio_id: int=0, ts: datetime.datetime = datetime.datetime.now()) -> None:
+        max_payload = 65535 - 8 - 20  # max UDP payload fitting in IPv4
+        if len(sock_content) > max_payload:
+            return
         pcap_hdr = struct.pack('<LLLL',
                 int(ts.timestamp()) % 4294967296,
                 ts.microsecond,
