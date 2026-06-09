@@ -140,13 +140,13 @@ class SdmLteParser:
     def sdm_lte_phy_cell_info(self, pkt: bytes):
         sdm_pkt_hdr = sdmcmd.parse_sdm_header(pkt[1:15])
         pkt = pkt[15:-1]
-        header = namedtuple('SdmLtePhyCellInfo', 'plmn zero1 arfcn pci zero2 reserved1 reserved2 rsrp rsrq num_ncell')
-        ncell_header = namedtuple('SdmLtePhyCellInfoNCellMeas', 'type earfcn pci zero1 reserved1 rsrp rsrq reserved2')
+        header = namedtuple('SdmLtePhyCellInfo', 'plmn zero1 arfcn pci zero2 rssi reserved2 rsrp rsrq num_ncell')
+        ncell_header = namedtuple('SdmLtePhyCellInfoNCellMeas', 'type earfcn pci zero1 rssi rsrp rsrq reserved2')
 
         if self.icd_ver >= (5, 40):
-            struct_format = '<IIIHHHHLLB'
+            struct_format = '<IIIHHhHLLB'
         else:
-            struct_format = '<IIHHHHHLLB'
+            struct_format = '<IIHHHhHLLB'
         expected_len = struct.calcsize(struct_format)
         if len(pkt) < expected_len:
             self.parent.logger.log(logging.WARNING, 'Packet length ({}) shorter than expected ({})'.format(len(pkt), expected_len))
@@ -158,7 +158,10 @@ class SdmLteParser:
         if self.parent:
             self.parent.lte_last_earfcn_dl[sdm_pkt_hdr.radio_id] = cell_info.arfcn
             self.parent.lte_last_pci[sdm_pkt_hdr.radio_id] = cell_info.pci
-        stdout = 'LTE PHY Cell Info: EARFCN: {}, PCI: {}, PLMN: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(cell_info.arfcn, cell_info.pci, cell_info.plmn, cell_info.rsrp / -100.0, cell_info.rsrq / -100.0)
+        stdout = 'LTE PHY Cell Info: EARFCN: {}, PCI: {}, PLMN: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(
+            cell_info.arfcn, cell_info.pci, cell_info.plmn,
+            cell_info.rssi / 100.0, cell_info.rsrp / -100.0, cell_info.rsrq / -100.0)
+        # stdout += 'LTE PHY Cell Info: {}\n'.format(binascii.hexlify(pkt).decode())
 
         if cell_info.num_ncell > 0:
             if self.icd_ver >= (5, 40):
@@ -171,46 +174,46 @@ class SdmLteParser:
                     ncell = ncell_header._make(struct.unpack(ncell_header_format, extra[i*ncell_len:(i+1)*ncell_len]))
                     if self.icd_ver >= (9, 0):
                         if ncell.type == 0:
-                            stdout += 'LTE PHY Cell Info: NCell {}: EARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {}: EARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         elif ncell.type == 6:
-                            stdout += 'LTE PHY Cell Info: NCell {} (NR): NR-ARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (NR): NR-ARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         else:
-                            stdout += 'LTE PHY Cell Info: NCell {} (Type {}): ARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.type, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
-                    elif self.icd_ver >= (7, 2):
+                            stdout += 'LTE PHY Cell Info: NCell {} (Type {}): ARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.type, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                    elif self.icd_ver >= (7, 3):
                         if ncell.type == 0:
-                            stdout += 'LTE PHY Cell Info: NCell {} (GSM): ARFCN: {}, BSIC: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (GSM): ARFCN: {}, BSIC: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         elif ncell.type == 1:
-                            stdout += 'LTE PHY Cell Info: NCell {} (WCDMA): UARFCN: {}, PSC: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (WCDMA): UARFCN: {}, PSC: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         elif ncell.type == 2:
-                            stdout += 'LTE PHY Cell Info: NCell {}: EARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {}: EARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         elif ncell.type == 6:
-                            stdout += 'LTE PHY Cell Info: NCell {} (NR): NR-ARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (NR): NR-ARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         else:
-                            stdout += 'LTE PHY Cell Info: NCell {} (Type {}): ARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.type, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (Type {}): ARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.type, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                     else:
-                        if ncell.type == 0:
-                            stdout += 'LTE PHY Cell Info: NCell {}: EARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                        if ncell.type == 0 or ncell.type == 2:
+                            stdout += 'LTE PHY Cell Info: NCell {}: EARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         elif ncell.type == 1:
-                            stdout += 'LTE PHY Cell Info: NCell {} (WCDMA): UARFCN: {}, PSC: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (WCDMA): UARFCN: {}, PSC: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         elif ncell.type == 3:
-                            stdout += 'LTE PHY Cell Info: NCell {} (GSM): ARFCN: {}, BSIC: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, (4294967296 - ncell.rsrq) / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (GSM): ARFCN: {}, BSIC: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, (4294967296 - ncell.rsrq) / -100.0)
                         elif ncell.type == 6:
-                            stdout += 'LTE PHY Cell Info: NCell {} (NR): NR-ARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (NR): NR-ARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
                         else:
-                            stdout += 'LTE PHY Cell Info: NCell {} (Type {}): ARFCN: {}, PCI: {}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.type, ncell.earfcn,
-                                ncell.pci, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
+                            stdout += 'LTE PHY Cell Info: NCell {} (Type {}): ARFCN: {}, PCI: {}, RSSI: {:.2f}, RSRP: {:.2f}, RSRQ: {:.2f}\n'.format(i, ncell.type, ncell.earfcn,
+                                ncell.pci, ncell.rssi / -100.0, ncell.rsrp / -100.0, ncell.rsrq / -100.0)
             else:
                 if self.parent:
                     self.parent.logger.log(logging.WARNING, 'Extra data length ({}) does not match with expected ({})'.format(len(extra), ncell_len * cell_info.num_ncell))
