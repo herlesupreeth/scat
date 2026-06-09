@@ -12,74 +12,218 @@ class TestSdmLteParser(unittest.TestCase):
     # PHY
 
     def test_sdm_lte_phy_cell_info(self):
+        self.parser.icd_ver = (4, 36)
+        payload = binascii.unhexlify('d0af0000000000000e067b010000c0e09cff742700004c04000004000e067b010000841c74270000e80300000000000e0672010000841c5c2b0000d00700000000000e067c010000841cc02b0000980800000000013c2ab7010000401f34210000f40100000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 1550, PCI: 379, PLMN: 45008, RSSI: -80.00, RSRP: -101.00, RSRQ: -11.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1550, PCI: 379, RSSI: -73.00, RSRP: -101.00, RSRQ: -10.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1550, PCI: 370, RSSI: -73.00, RSRP: -111.00, RSRQ: -20.00
+LTE PHY Cell Info: NCell 2: EARFCN: 1550, PCI: 380, RSSI: -73.00, RSRP: -112.00, RSRQ: -22.00
+LTE PHY Cell Info: NCell 3 (WCDMA): UARFCN: 10812, PSC: 439, RSSI: -80.00, RSRP: -85.00, RSRQ: -5.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
         self.parser.icd_ver = (4, 80)
         payload = binascii.unhexlify('7f3c0000390087ffa002020b418b35d0af0000000000000e067b010000ecc850fb14370000d007000001000e0615010000bc1bcc290000a406000000007e')
         result = self.parser.sdm_lte_phy_cell_info(payload)
-        expected = 'LTE PHY Cell Info: EARFCN: 1550, PCI: 379, PLMN: 45008, RSRP: -141.00, RSRQ: -20.00\nLTE PHY Cell Info: NCell 0: EARFCN: 1550, PCI: 277, RSRP: -107.00, RSRQ: -17.00'
+        expected = '''LTE PHY Cell Info: EARFCN: 1550, PCI: 379, PLMN: 45008, RSSI: -141.00, RSRP: -141.00, RSRQ: -20.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1550, PCI: 277, RSSI: -71.00, RSRP: -107.00, RSRQ: -17.00'''
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         payload = binascii.unhexlify('7f290000260020ffa00202f7f42335d0af0000000000000e067b0100007ce370fea028000078050000007e')
         result = self.parser.sdm_lte_phy_cell_info(payload)
-        expected = 'LTE PHY Cell Info: EARFCN: 1550, PCI: 379, PLMN: 45008, RSRP: -104.00, RSRQ: -14.00'
+        expected = 'LTE PHY Cell Info: EARFCN: 1550, PCI: 379, PLMN: 45008, RSSI: -73.00, RSRP: -104.00, RSRQ: -14.00'
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         payload = binascii.unhexlify('7f2900002600265ca00202f15b1b22ceaf00000000000032000b0000005ce084036829000058020000007e')
         result = self.parser.sdm_lte_phy_cell_info(payload)
-        expected = 'LTE PHY Cell Info: EARFCN: 50, PCI: 11, PLMN: 45006, RSRP: -106.00, RSRQ: -6.00'
+        expected = 'LTE PHY Cell Info: EARFCN: 50, PCI: 11, PLMN: 45006, RSSI: -81.00, RSRP: -106.00, RSRQ: -6.00'
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         payload = binascii.unhexlify('5a66000000000000220b70010000ccde20035c2b0000f40100000200220be2000000fc21502d000084030000000000220b9f000000c422182e0000200300000000')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
         result = self.parser.sdm_lte_phy_cell_info(packet)
-        expected = '''LTE PHY Cell Info: EARFCN: 2850, PCI: 368, PLMN: 26202, RSRP: -111.00, RSRQ: -5.00
-LTE PHY Cell Info: NCell 0: EARFCN: 2850, PCI: 226, RSRP: -116.00, RSRQ: -9.00
-LTE PHY Cell Info: NCell 1: EARFCN: 2850, PCI: 159, RSRP: -118.00, RSRQ: -8.00'''
+        expected = '''LTE PHY Cell Info: EARFCN: 2850, PCI: 368, PLMN: 26202, RSSI: -85.00, RSRP: -111.00, RSRQ: -5.00
+LTE PHY Cell Info: NCell 0: EARFCN: 2850, PCI: 226, RSSI: -87.00, RSRP: -116.00, RSRQ: -9.00
+LTE PHY Cell Info: NCell 1: EARFCN: 2850, PCI: 159, RSSI: -89.00, RSRP: -118.00, RSRQ: -8.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('5a66000000000000220b70010000f8dfe803942a0000f40100000300220be20000009821ec2c0000200300000000014429ce000000a41fc4220000bc020000000001442942010000a41f28230000200300000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 2850, PCI: 368, PLMN: 26202, RSSI: -82.00, RSRP: -109.00, RSRQ: -5.00
+LTE PHY Cell Info: NCell 0: EARFCN: 2850, PCI: 226, RSSI: -86.00, RSRP: -115.00, RSRQ: -8.00
+LTE PHY Cell Info: NCell 1 (WCDMA): UARFCN: 10564, PSC: 206, RSSI: -81.00, RSRP: -89.00, RSRQ: -7.00
+LTE PHY Cell Info: NCell 2 (WCDMA): UARFCN: 10564, PSC: 322, RSSI: -81.00, RSRP: -90.00, RSRQ: -8.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('20f2620000000000220b25000000c819b004f82a0000580200002600220b39000000dc1eec2c0000bc02000000000144291c000000d02060220000b00400000000014429320000006c208c23000078050000000000220bff000000d020cc29000090010000000000220bff0000006022242c000058020000000000220bff0000002823182e00004c0400000000030000ff000000c422b01d00004480ffff0000030000ff000000f023b01d00004480ffff0000030000ff000000f023e42500004480ffff0000030000ff000000f0235c2b00004480ffff0000030000ff000000f0235c2b00004480ffff0000000000ff000000b8240000000000000000000000000024000000e81c00000000000000000000000000ff0000003c2800000000000000000000000000ff000000b82400000000000000000000000000ffff0000d02000000000000000000000000000ffff00006c2000000000000000000000000000ffff0000dc1e00000000000000000000000000ffff0000e81c00000000000000000000000000ffff0000bc1b00000000000000000000000000ffff0000f02300000000000000000000000000ffff0000602200000000000000000000000000ffff0000f02300000000000000000000000000ffff0000102700000000000000000000000000ffff0000e42500000000000000000000000000ffff0000ac2600000000000000000000000000ffff0000d02000000000000000000000000000ffff0000802500000000000000000000000000ffff0000b82400000000000000000000000000ffff0000b82400000000000000000000000000ffff0000c42200000000000000000000000000ffff0000742700000000000000000000000000ffff0000b82400000000000000000000000000ffff0000f02300000000000000000000000000ffff0000282300000000000000000000000000ffff0000f02300000000000000000000000000ffff0000b82400000000000000000000000000ffff00003c2800000000000000000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 2850, PCI: 37, PLMN: 6484512, RSSI: 66.00, RSRP: -110.00, RSRQ: -6.00
+LTE PHY Cell Info: NCell 0: EARFCN: 2850, PCI: 57, RSSI: -79.00, RSRP: -115.00, RSRQ: -7.00
+LTE PHY Cell Info: NCell 1 (WCDMA): UARFCN: 10564, PSC: 28, RSSI: -84.00, RSRP: -88.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 2 (WCDMA): UARFCN: 10564, PSC: 50, RSSI: -83.00, RSRP: -91.00, RSRQ: -14.00
+LTE PHY Cell Info: NCell 3: EARFCN: 2850, PCI: 255, RSSI: -84.00, RSRP: -107.00, RSRQ: -4.00
+LTE PHY Cell Info: NCell 4: EARFCN: 2850, PCI: 255, RSSI: -88.00, RSRP: -113.00, RSRQ: -6.00
+LTE PHY Cell Info: NCell 5: EARFCN: 2850, PCI: 255, RSSI: -90.00, RSRP: -118.00, RSRQ: -11.00
+LTE PHY Cell Info: NCell 6 (GSM): ARFCN: 0, BSIC: 255, RSSI: -89.00, RSRP: -76.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 7 (GSM): ARFCN: 0, BSIC: 255, RSSI: -92.00, RSRP: -76.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 8 (GSM): ARFCN: 0, BSIC: 255, RSSI: -92.00, RSRP: -97.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 9 (GSM): ARFCN: 0, BSIC: 255, RSSI: -92.00, RSRP: -111.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 10 (GSM): ARFCN: 0, BSIC: 255, RSSI: -92.00, RSRP: -111.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 11: EARFCN: 0, PCI: 255, RSSI: -94.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 12: EARFCN: 0, PCI: 36, RSSI: -74.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 13: EARFCN: 0, PCI: 255, RSSI: -103.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 14: EARFCN: 0, PCI: 255, RSSI: -94.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 15: EARFCN: 0, PCI: 65535, RSSI: -84.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 16: EARFCN: 0, PCI: 65535, RSSI: -83.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 17: EARFCN: 0, PCI: 65535, RSSI: -79.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 18: EARFCN: 0, PCI: 65535, RSSI: -74.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 19: EARFCN: 0, PCI: 65535, RSSI: -71.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 20: EARFCN: 0, PCI: 65535, RSSI: -92.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 21: EARFCN: 0, PCI: 65535, RSSI: -88.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 22: EARFCN: 0, PCI: 65535, RSSI: -92.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 23: EARFCN: 0, PCI: 65535, RSSI: -100.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 24: EARFCN: 0, PCI: 65535, RSSI: -97.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 25: EARFCN: 0, PCI: 65535, RSSI: -99.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 26: EARFCN: 0, PCI: 65535, RSSI: -84.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 27: EARFCN: 0, PCI: 65535, RSSI: -96.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 28: EARFCN: 0, PCI: 65535, RSSI: -94.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 29: EARFCN: 0, PCI: 65535, RSSI: -94.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 30: EARFCN: 0, PCI: 65535, RSSI: -89.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 31: EARFCN: 0, PCI: 65535, RSSI: -101.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 32: EARFCN: 0, PCI: 65535, RSSI: -94.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 33: EARFCN: 0, PCI: 65535, RSSI: -92.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 34: EARFCN: 0, PCI: 65535, RSSI: -90.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 35: EARFCN: 0, PCI: 65535, RSSI: -92.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 36: EARFCN: 0, PCI: 65535, RSSI: -94.00, RSRP: -0.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 37: EARFCN: 0, PCI: 65535, RSSI: -103.00, RSRP: -0.00, RSRQ: -0.00'''
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         self.parser.icd_ver = (6, 22)
         payload = binascii.unhexlify('ceaf000000000000640000000b00000050e21405d8270000e803000000')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
         result = self.parser.sdm_lte_phy_cell_info(packet)
-        expected = 'LTE PHY Cell Info: EARFCN: 100, PCI: 11, PLMN: 45006, RSRP: -102.00, RSRQ: -10.00'
+        expected = 'LTE PHY Cell Info: EARFCN: 100, PCI: 11, PLMN: 45006, RSSI: -76.00, RSRP: -102.00, RSRQ: -10.00'
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         payload = binascii.unhexlify('ceaf000000000000640000000b00000018e37805d8270000e80300000102ea0b00000b0000007017c4220000840300000000')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
         result = self.parser.sdm_lte_phy_cell_info(packet)
-        expected = '''LTE PHY Cell Info: EARFCN: 100, PCI: 11, PLMN: 45006, RSRP: -102.00, RSRQ: -10.00
-LTE PHY Cell Info: NCell 0 (Type 2): ARFCN: 3050, PCI: 11, RSRP: -89.00, RSRQ: -9.00'''
+        expected = '''LTE PHY Cell Info: EARFCN: 100, PCI: 11, PLMN: 45006, RSSI: -74.00, RSRP: -102.00, RSRQ: -10.00
+LTE PHY Cell Info: NCell 0: EARFCN: 3050, PCI: 11, RSSI: -60.00, RSRP: -89.00, RSRQ: -9.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('d0af0000000000000e0600007b010000d4e5e803ac2600004c040000020600b7090047010000c819542400000000000000000600b7090006030000c819b82400002c0100000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 1550, PCI: 379, PLMN: 45008, RSSI: -67.00, RSRP: -99.00, RSRQ: -11.00
+LTE PHY Cell Info: NCell 0 (NR): NR-ARFCN: 636672, PCI: 327, RSSI: -66.00, RSRP: -93.00, RSRQ: -0.00
+LTE PHY Cell Info: NCell 1 (NR): NR-ARFCN: 636672, PCI: 774, RSSI: -66.00, RSRP: -94.00, RSRQ: -3.00'''
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         self.parser.icd_ver = (7, 0)
         payload = binascii.unhexlify('5966000000000000140500000001000070e57cfc68290000a40600000500f401000041000000901a8025000020030000000000a50e0000da010000a816a41f00005802000000000000190000ac000000f811bc1b000058020000000003000000001f0000003818381800004480ffff0000030000000038000000d020d02000004480ffff0000')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
         result = self.parser.sdm_lte_phy_cell_info(packet)
-        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 256, PLMN: 26201, RSRP: -106.00, RSRQ: -17.00
-LTE PHY Cell Info: NCell 0: EARFCN: 500, PCI: 65, RSRP: -96.00, RSRQ: -8.00
-LTE PHY Cell Info: NCell 1: EARFCN: 3749, PCI: 474, RSRP: -81.00, RSRQ: -6.00
-LTE PHY Cell Info: NCell 2: EARFCN: 6400, PCI: 172, RSRP: -71.00, RSRQ: -6.00
-LTE PHY Cell Info: NCell 3 (GSM): ARFCN: 0, BSIC: 31, RSRP: -62.00, RSRQ: -327.00
-LTE PHY Cell Info: NCell 4 (GSM): ARFCN: 0, BSIC: 56, RSRP: -84.00, RSRQ: -327.00'''
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 256, PLMN: 26201, RSSI: -68.00, RSRP: -106.00, RSRQ: -17.00
+LTE PHY Cell Info: NCell 0: EARFCN: 500, PCI: 65, RSSI: -68.00, RSRP: -96.00, RSRQ: -8.00
+LTE PHY Cell Info: NCell 1: EARFCN: 3749, PCI: 474, RSSI: -58.00, RSRP: -81.00, RSRQ: -6.00
+LTE PHY Cell Info: NCell 2: EARFCN: 6400, PCI: 172, RSSI: -46.00, RSRP: -71.00, RSRQ: -6.00
+LTE PHY Cell Info: NCell 3 (GSM): ARFCN: 0, BSIC: 31, RSSI: -62.00, RSRP: -62.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 4 (GSM): ARFCN: 0, BSIC: 56, RSSI: -84.00, RSRP: -84.00, RSRQ: -327.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('5966000000000000140500003800000050e2c800942a00004c04000003001405000036000000b01d302a0000b0040000000006de930600db0300000820882c0000dc050000000006de930600dc0300000820b42d0000dc0500000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 56, PLMN: 26201, RSSI: -76.00, RSRP: -109.00, RSRQ: -11.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 54, RSSI: -76.00, RSRP: -108.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 1 (NR): NR-ARFCN: 431070, PCI: 987, RSSI: -82.00, RSRP: -114.00, RSRQ: -15.00
+LTE PHY Cell Info: NCell 2 (NR): NR-ARFCN: 431070, PCI: 988, RSSI: -82.00, RSRP: -117.00, RSRQ: -15.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        self.parser.icd_ver = (7, 1)
+        payload = binascii.unhexlify('59660000000000001405000005000000ecc848f414370000d007000005001405000003000000201c302a0000dc050000000000a40500005d000000781ef82a0000dc050000000000a50e000021000000e81c3c280000b0040000000006de930600db030000841c6829000078050000000006de930600dc030000841c68290000780500000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSSI: -141.00, RSRP: -141.00, RSRQ: -20.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSSI: -72.00, RSRP: -108.00, RSRQ: -15.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1444, PCI: 93, RSSI: -78.00, RSRP: -110.00, RSRQ: -15.00
+LTE PHY Cell Info: NCell 2: EARFCN: 3749, PCI: 33, RSSI: -74.00, RSRP: -103.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 3 (NR): NR-ARFCN: 431070, PCI: 987, RSSI: -73.00, RSRP: -106.00, RSRQ: -14.00
+LTE PHY Cell Info: NCell 4 (NR): NR-ARFCN: 431070, PCI: 988, RSSI: -73.00, RSRP: -106.00, RSRQ: -14.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('c04f0000000000002c0100001b0100002ce85802c42200002003000007002c01000042010000a816f02300004c04000000000008070000420100007017e4250000400600000000007806000042010000641980250000b00400000000010f0c0000580100003818c8190000900100000000010f0c0000660000003818bc1b000020030000000006b86302001b010000501408200000dc050000000006b86302004201000050146c200000dc0500000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 300, PCI: 283, PLMN: 20416, RSSI: -61.00, RSRP: -89.00, RSRQ: -8.00
+LTE PHY Cell Info: NCell 0: EARFCN: 300, PCI: 322, RSSI: -58.00, RSRP: -92.00, RSRQ: -11.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1800, PCI: 322, RSSI: -60.00, RSRP: -97.00, RSRQ: -16.00
+LTE PHY Cell Info: NCell 2: EARFCN: 1656, PCI: 322, RSSI: -65.00, RSRP: -96.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 3 (WCDMA): UARFCN: 3087, PSC: 344, RSSI: -62.00, RSRP: -66.00, RSRQ: -4.00
+LTE PHY Cell Info: NCell 4 (WCDMA): UARFCN: 3087, PSC: 102, RSSI: -62.00, RSRP: -71.00, RSRQ: -8.00
+LTE PHY Cell Info: NCell 5 (NR): NR-ARFCN: 156600, PCI: 283, RSSI: -52.00, RSRP: -82.00, RSRQ: -15.00
+LTE PHY Cell Info: NCell 6 (NR): NR-ARFCN: 156600, PCI: 322, RSSI: -52.00, RSRP: -83.00, RSRQ: -15.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        self.parser.icd_ver = (7, 2)
+        payload = binascii.unhexlify('5966000000000000140500000500000064e770fe3c280000a4060000070014050000030000009c186829000008070000000000a50e0000230000000019b8240000b0040000000000a50e000021000000001910270000a40600000000000019000049010000581b682900000807000000000300000000180000006c206c2000004480ffff0000030000000014000000d020d02000004480ffff00000300000000040000003421342100004480ffff0000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSSI: -63.00, RSRP: -103.00, RSRQ: -17.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSSI: -63.00, RSRP: -106.00, RSRQ: -18.00
+LTE PHY Cell Info: NCell 1: EARFCN: 3749, PCI: 35, RSSI: -64.00, RSRP: -94.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 2: EARFCN: 3749, PCI: 33, RSSI: -64.00, RSRP: -100.00, RSRQ: -17.00
+LTE PHY Cell Info: NCell 3: EARFCN: 6400, PCI: 329, RSSI: -70.00, RSRP: -106.00, RSRQ: -18.00
+LTE PHY Cell Info: NCell 4 (GSM): ARFCN: 0, BSIC: 24, RSSI: -83.00, RSRP: -83.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 5 (GSM): ARFCN: 0, BSIC: 20, RSSI: -84.00, RSRP: -84.00, RSRQ: -327.00
+LTE PHY Cell Info: NCell 6 (GSM): ARFCN: 0, BSIC: 4, RSSI: -85.00, RSRP: -85.00, RSRQ: -327.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        payload = binascii.unhexlify('5966000000000000140500000500000000e7a8fdd8270000a4060000060014050000030000000019a02800000807000000000014050000360000009c18cc290000fc08000000000014050000ab0000000019302a000060090000000000a50e0000210000002c1a3c280000a4060000000000a40500005d0000002c1a68290000d0070000000006de930600dc030000381874270000a40600000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSSI: -64.00, RSRP: -102.00, RSRQ: -17.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSSI: -64.00, RSRP: -104.00, RSRQ: -18.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1300, PCI: 54, RSSI: -63.00, RSRP: -107.00, RSRQ: -23.00
+LTE PHY Cell Info: NCell 2: EARFCN: 1300, PCI: 171, RSSI: -64.00, RSRP: -108.00, RSRQ: -24.00
+LTE PHY Cell Info: NCell 3: EARFCN: 3749, PCI: 33, RSSI: -67.00, RSRP: -103.00, RSRQ: -17.00
+LTE PHY Cell Info: NCell 4: EARFCN: 1444, PCI: 93, RSSI: -67.00, RSRP: -106.00, RSRQ: -20.00
+LTE PHY Cell Info: NCell 5 (NR): NR-ARFCN: 431070, PCI: 988, RSSI: -62.00, RSRP: -101.00, RSRQ: -17.00'''
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         self.parser.icd_ver = (8, 0)
-        payload = binascii.unhexlify('5966000000000000140500000500000018e35802cc29000084030000030214050000030000004c1d5c2b00004c040000000002a40500005d000000141e5c2b0000b0040000000002a50e000021000000e81ca02800004c0400000000')
+        payload = binascii.unhexlify('59660000000000001405000005000000ece1f401042900002003000004021405000003000000781e5c2b000014050000000002a40500005d0000006c20c02b0000b0040000000002a50e000021000000841c3c280000b0040000000006de930600dc0300006c20c02b0000140500000000')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
         result = self.parser.sdm_lte_phy_cell_info(packet)
-        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSRP: -107.00, RSRQ: -9.00
-LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSRP: -111.00, RSRQ: -11.00
-LTE PHY Cell Info: NCell 1: EARFCN: 1444, PCI: 93, RSRP: -111.00, RSRQ: -12.00
-LTE PHY Cell Info: NCell 2: EARFCN: 3749, PCI: 33, RSRP: -104.00, RSRQ: -11.00'''
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSSI: -77.00, RSRP: -105.00, RSRQ: -8.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSSI: -78.00, RSRP: -111.00, RSRQ: -13.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1444, PCI: 93, RSSI: -83.00, RSRP: -112.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 2: EARFCN: 3749, PCI: 33, RSSI: -73.00, RSRP: -103.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 3 (NR): NR-ARFCN: 431070, PCI: 988, RSSI: -83.00, RSRP: -112.00, RSRQ: -13.00'''
         self.assertEqual(result['stdout'], expected) # type: ignore
 
         payload = binascii.unhexlify('5966000000000000140500000500000088e1f401302a00008403000004021405000003000000b01d5c2b000014050000000002a40500005d000000a41f5c2b000014050000000002a50e000021000000201c3c280000b0040000000006de930600dc0300006c205c2b0000140500000000')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
         result = self.parser.sdm_lte_phy_cell_info(packet)
-        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSRP: -108.00, RSRQ: -9.00
-LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSRP: -111.00, RSRQ: -13.00
-LTE PHY Cell Info: NCell 1: EARFCN: 1444, PCI: 93, RSRP: -111.00, RSRQ: -13.00
-LTE PHY Cell Info: NCell 2: EARFCN: 3749, PCI: 33, RSRP: -103.00, RSRQ: -12.00
-LTE PHY Cell Info: NCell 3 (NR): NR-ARFCN: 431070, PCI: 988, RSRP: -111.00, RSRQ: -13.00'''
+        expected = '''LTE PHY Cell Info: EARFCN: 1300, PCI: 5, PLMN: 26201, RSSI: -78.00, RSRP: -108.00, RSRQ: -9.00
+LTE PHY Cell Info: NCell 0: EARFCN: 1300, PCI: 3, RSSI: -76.00, RSRP: -111.00, RSRQ: -13.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1444, PCI: 93, RSSI: -81.00, RSRP: -111.00, RSRQ: -13.00
+LTE PHY Cell Info: NCell 2: EARFCN: 3749, PCI: 33, RSSI: -72.00, RSRP: -103.00, RSRQ: -12.00
+LTE PHY Cell Info: NCell 3 (NR): NR-ARFCN: 431070, PCI: 988, RSSI: -83.00, RSRP: -111.00, RSRQ: -13.00'''
+        self.assertEqual(result['stdout'], expected) # type: ignore
+
+        self.parser.icd_ver = (9, 10)
+        payload = binascii.unhexlify('425a00000000000000190000a901000038e664005424000084030000030000190000e7010000c81974270000a40600000000003a070000e7010000d41768290000dc05000000000672540200a90100005014401f00004c0400000000')
+        packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_PHY_NCELL_INFO, payload, timestamp=0x0)
+        result = self.parser.sdm_lte_phy_cell_info(packet)
+        expected = '''LTE PHY Cell Info: EARFCN: 6400, PCI: 425, PLMN: 23106, RSSI: -66.00, RSRP: -93.00, RSRQ: -9.00
+LTE PHY Cell Info: NCell 0: EARFCN: 6400, PCI: 487, RSSI: -66.00, RSRP: -101.00, RSRQ: -17.00
+LTE PHY Cell Info: NCell 1: EARFCN: 1850, PCI: 487, RSSI: -61.00, RSRP: -106.00, RSRQ: -15.00
+LTE PHY Cell Info: NCell 2 (NR): NR-ARFCN: 152690, PCI: 425, RSSI: -52.00, RSRP: -80.00, RSRQ: -11.00'''
         self.assertEqual(result['stdout'], expected) # type: ignore
 
     def test_sdm_lte_phy_cell_search_meas(self):
@@ -388,6 +532,8 @@ LTE L1 Sync Info: SCell 2: PCI: 293, Bandwidth: 20 MHz, phich-Duration: normal, 
 
     # NAS
     def test_sdm_lte_nas_eps_bearer_context(self):
+        self.parser.icd_ver = (6, 22)
+
         payload = binascii.unhexlify('00050001')
         packet = sdmcmd.generate_sdm_packet(0xa0, sdmcmd.sdm_command_group.CMD_LTE_DATA, sdmcmd.sdm_lte_data.LTE_NAS_EPS_BEARER_CONTEXT, payload, timestamp=0x0)
         result = self.parser.sdm_lte_nas_eps_bearer_context(packet)
