@@ -690,10 +690,14 @@ class DiagLteLogParser:
         subpkt_pos = 1
         for j in range(n_samples):
             if subpkt_hdr.version == 0x01:
+                if subpkt_pos + 12 > len(subpkt_body):
+                    break
                 subpkt_mac_ul_tb = subpkt_mac_ul_tb_struct._make(struct.unpack('<BBHHBHBBB', subpkt_body[subpkt_pos:subpkt_pos+12]))
                 mac_hdr = subpkt_body[subpkt_pos+12:subpkt_pos+12+subpkt_mac_ul_tb.header_len]
                 subpkt_pos += (12 + subpkt_mac_ul_tb.header_len)
             elif subpkt_hdr.version == 0x02 or subpkt_hdr.version == 0x03 or subpkt_hdr.version == 0x05 or subpkt_hdr.version == 0x08:
+                if subpkt_pos + 14 > len(subpkt_body):
+                    break
                 subpkt_mac_ul_tb = subpkt_mac_ul_tb_struct_v2._make(struct.unpack('<BBBBHHBHBBB', subpkt_body[subpkt_pos:subpkt_pos+14]))
                 mac_hdr = subpkt_body[subpkt_pos+14:subpkt_pos+14+subpkt_mac_ul_tb.header_len]
                 subpkt_pos += (14 + subpkt_mac_ul_tb.header_len)
@@ -759,6 +763,8 @@ class DiagLteLogParser:
         if pkt_version == 0x31:
             pos += (19 * 28)
         for i in range(num_tb):
+            if pos + 16 > len(pkt_body):
+                break
             subpkt_tb = subpkt_tb_common_info._make(struct.unpack('<LLL B B H', pkt_body[pos:pos+16]))
             pos += 16
 
@@ -774,6 +780,8 @@ class DiagLteLogParser:
             mac_hdr_len = var3_bits[0:12].uint
 
             for j in range(subpkt_tb.num_sdu):
+                if pos + 3 > len(pkt_body):
+                    break
                 mac_common_info_bits = bitstring.Bits(pkt_body[pos:pos+3][::-1])
                 is_mce = mac_common_info_bits[0:1].uint
                 lcid = mac_common_info_bits[1:7].uint
@@ -831,6 +839,8 @@ class DiagLteLogParser:
                     for k in range(num_pdcp_grp):
                         has_more = 1
                         while has_more == 1:
+                            if pos + 4 > len(pkt_body):
+                                break
                             pdcp_grp_bits = bitstring.Bits(pkt_body[pos:pos+4][::-1])
                             has_more = pdcp_grp_bits[0:1].uint
                             pos += 4
